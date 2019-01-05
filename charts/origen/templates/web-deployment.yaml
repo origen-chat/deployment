@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-{{ .Values.web.componentName }}-deployment
+  labels:
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version \| replace "+" "_" }}
+    app.kubernetes.io/name: {{ template "name" . }}
+    app.kubernetes.io/component: {{ .Values.web.componentName }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.web.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ template "name" . }}
+      app.kubernetes.io/component: {{ .Values.web.componentName }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version \| replace "+" "_" }}
+        app.kubernetes.io/name: {{ template "name" . }}
+        app.kubernetes.io/component: {{ .Values.web.componentName }}
+        app.kubernetes.io/version: {{ .Chart.AppVersion }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+    spec:
+      containers:
+        - name: {{ .Values.web.componentName }}
+          image: {{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}
+          ports:
+            - containerPort: {{ .Values.web.serverPort }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.web.serverPort }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3

@@ -1,0 +1,58 @@
+appName: origen
+
+domainName: origen.chat
+
+googleClientId: "509060080781-j83a38vh8nnfjb1j72c7u3oqin25ppsk.apps.googleusercontent.com"
+facebookClientId: ""
+githubClientId: ""
+
+api:
+  componentName: api
+  replicas: 1
+  serverPort: 4000
+  healthinessProbePath: /healthz
+  readinessProbePath: /ready
+  image:
+    repository: origen/api
+    tag: latest
+
+api:
+  componentName: worker
+  replicas: 1
+  serverPort: 4000
+  healthinessProbePath: /healthz
+  readinessProbePath: /ready
+  image:
+    repository: origen/worker
+    tag: latest
+
+app:
+  componentName: app
+  replicas: 1
+  serverPort: 4000
+  image:
+    repository: origen/app
+    tag: latest
+
+web:
+  componentName: web
+  replicas: 1
+  serverPort: 4000
+  image:
+    repository: origen/web
+    tag: latest
+
+postgresql:
+  image:
+    tag: 11.1
+  postgresqlDatabase: origen
+  persistence:
+    size: 2Gi
+
+redis:
+  image:
+    tag: 5.0.3
+
+nginx-ingress:
+  image:
+    tag: 0.21.0

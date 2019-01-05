@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-{{ .Values.worker.componentName }}-deployment
+  labels:
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version \| replace "+" "_" }}
+    app.kubernetes.io/name: {{ template "name" . }}
+    app.kubernetes.io/component: {{ .Values.worker.componentName }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.worker.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ template "name" . }}
+      app.kubernetes.io/component: {{ .Values.worker.componentName }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version \| replace "+" "_" }}
+        app.kubernetes.io/name: {{ template "name" . }}
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/version: {{ .Chart.AppVersion }}
+        app.kubernetes.io/component: {{ .Values.worker.componentName }}
+    spec:
+      containers:
+        - name: {{ .Values.worker.componentName }}
+          image: {{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag }}
+          ports:
+            - containerPort: {{ .Values.worker.serverPort }}
+
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.worker.healthinessProbePath }}
+              port: {{ .Values.worker.serverPort }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.worker.readinessProbePath }}
+              port: {{ .Values.worker.serverPort }}
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 3
+
+      volumes:
+        - name: {{ .Values.worker.componentName }}-secrets
+          secret:
+            secretName: {{ .Release.Name }}-{{ .Values.worker.componentName }}-secrets
